@@ -63,7 +63,7 @@ tag_to_ix = {tag: i for i, tag in enumerate(tag_counts)}
 #parametres
 embedding_dim = 64
 hidden_dim = 128
-epochs=100
+epochs=5
 batch_size=2
 
 # données et data loader
