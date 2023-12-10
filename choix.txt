@@ -60,7 +60,12 @@ Creation d'une baseline transformer pour POS (+ efficace que LSTM) 0.93 acc 50 e
 
 baseline transformer POS + Lemme :
     pour 50 epochs :
-        POS acc 0.9570 (donc ça a augmenter juste avec l'ajout de la prediction de Lemme)
+        POS acc 0.9570 (donc ça a augmenter juste avec l'ajout de la prediction de Lemme) (à vérifier)
         Lemme acc 0.8984 (à faire un transformer seul pour voir si ça change)
         Total acc (POS+Lemme)/2 : 0.9277
         Total loss 1.11
+
+baseline transformer POS + Lemme + morphologiques
+    POS acc 0.9570 (légère baisse mais j'imagine du au hasard (a verifier))
+    Lemme 0.8898 (légère baisse aussi, peut être pas du au hasard du coup)
+    morphs 0.9911 trop haut je pense que y'a un soucis

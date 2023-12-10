@@ -125,7 +125,7 @@ with torch.no_grad():
     print(f"Vraies étiquettes POS: {true_tags}")
 
 
-#Evaluations du modele : ici accuracy mais voir ce qui est le plus important
+#Evaluations du modele : ici accuracy mais voir si y'en a pas un mieux
 def calculate_accuracy(true_tags, pred_tags):
     correct = sum(t1 == t2 for t1, t2 in zip(true_tags, pred_tags))
     return correct / len(true_tags)
