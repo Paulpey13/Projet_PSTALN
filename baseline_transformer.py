@@ -143,4 +143,4 @@ filtered_true_tags = [tag for tag in all_true_tags if tag != -1]
 filtered_predicted_tags = [all_predicted_tags[i] for i, tag in enumerate(all_true_tags) if tag != -1]
 #Calculer l'accuracy
 accuracy = calculate_accuracy(filtered_true_tags, filtered_predicted_tags)
-print(f"Accuracy: {accuracy:.4f}")
+print(f"Accuracy : {accuracy:.4f}")
