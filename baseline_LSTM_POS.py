@@ -1,3 +1,4 @@
+#Baseline LSTM (pour changer du GRU vu en TP)
 import torch
 import torch.nn as nn
 import torch.optim as optim
