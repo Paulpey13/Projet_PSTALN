@@ -6,7 +6,7 @@ from conllu import parse_incr
 from collections import Counter
 from torch.nn.utils.rnn import pad_sequence
 
-# Lecture et prétraitement des données
+#Lecture des donnnées
 def load_data(conllu_file):
     sentences, pos_tags = [], []
     with open(conllu_file, 'r', encoding='utf-8') as file:
@@ -15,7 +15,7 @@ def load_data(conllu_file):
             pos_tags.append([token['upos'] for token in sentence])
     return sentences, pos_tags
 
-# Définition de la classe Dataset
+#Importer les pos
 class POSDataset(Dataset):
     def __init__(self, sentences, tags, word_to_ix, tag_to_ix):
         self.sentences = [torch.tensor([word_to_ix[word] for word in sentence], dtype=torch.long) for sentence in sentences]
@@ -27,14 +27,14 @@ class POSDataset(Dataset):
     def __getitem__(self, idx):
         return self.sentences[idx], self.tags[idx]
 
-# Padding des séquences pour les batches
+#Padding de sequences
 def collate_fn(batch):
     sentences, tags = zip(*batch)
     sentences_padded = pad_sequence(sentences, batch_first=True, padding_value=0)
     tags_padded = pad_sequence(tags, batch_first=True, padding_value=-1)
     return sentences_padded, tags_padded
 
-# Définition du modèle
+#classe du model (ici lstm mais on peut changer cetait pour test un truc different du TP)
 class POSModel(nn.Module):
     def __init__(self, vocab_size, embedding_dim, hidden_dim, tagset_size):
         super(POSModel, self).__init__()
