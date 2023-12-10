@@ -57,3 +57,10 @@ Creation d'une baseline LSTM pour POS(pour faire un truc different du TP) 0.72 a
 Creation d'une baseline transformer pour POS (+ efficace que LSTM) 0.93 acc 50 epochs
 à faire prochainement : 
     Cross validation pour les 2 pour trouver les meilleurs parametres
+
+baseline transformer POS + Lemme :
+    pour 50 epochs :
+        POS acc 0.9570 (donc ça a augmenter juste avec l'ajout de la prediction de Lemme)
+        Lemme acc 0.8984 (à faire un transformer seul pour voir si ça change)
+        Total acc (POS+Lemme)/2 : 0.9277
+        Total loss 1.11
