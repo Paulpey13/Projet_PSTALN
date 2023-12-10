@@ -76,7 +76,7 @@ loss_function = nn.CrossEntropyLoss(ignore_index=-1)
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
 #training
-for epoch in range(epochs):  # Nombre d'époques
+for epoch in range(epochs):  #nb d'epochs
     total_loss = 0
     for sentence_in, targets in data_loader:
         model.zero_grad()
