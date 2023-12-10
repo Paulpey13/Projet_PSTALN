@@ -59,7 +59,8 @@ class PositionalEncoding(nn.Module):
         x = x + self.pe[:x.size(0)]
         return self.dropout(x)
 
-#Modele tranformer pour le POS
+#Modele transformer POS
+#Ajoute des lemme
 class POSLemTransformerModel(nn.Module):
     def __init__(self, vocab_size, embedding_dim, nhead, nhid, nlayers, pos_tagset_size, lemma_vocab_size):
         super(POSLemTransformerModel, self).__init__()
@@ -75,11 +76,11 @@ class POSLemTransformerModel(nn.Module):
         embeds = self.embedding(sentence) * math.sqrt(self.embedding_dim)
         embeds = self.pos_encoder(embeds)
         transformer_out = self.transformer_encoder(embeds)
-        # Pour POS tagging
+        #Pour POS tagging
         pos_tag_space = self.hidden2pos_tag(transformer_out)
         pos_tag_scores = torch.log_softmax(pos_tag_space, dim=2)
 
-        # Pour lemmatisation
+        #Pour lemmatisation
         lemma_space = self.hidden2lemma(transformer_out)
         lemma_scores = torch.log_softmax(lemma_space, dim=2)
 
@@ -158,13 +159,14 @@ with torch.no_grad():
             all_true_lemmas.extend(lemmas[i][valid_indices].tolist())
             all_predicted_lemmas.extend(lemma_predicted[i][valid_indices].tolist())
 
-# Calcul de l'accuracy pour le POS tagging et la lemmatisation
+#Calcul des 2 accuracy
 accuracy_pos = calculate_accuracy(all_true_pos, all_predicted_pos)
 accuracy_lemmas = calculate_accuracy(all_true_lemmas, all_predicted_lemmas)
 
-# Calcul du score total (moyenne des deux accuracies)
+#moyenne des 2 poru avoir un score total
 total_score = (accuracy_pos + accuracy_lemmas) / 2
 
+#print les scores
 print(f"POS Tagging Accuracy: {accuracy_pos:.4f}")
 print(f"Lemmatization Accuracy: {accuracy_lemmas:.4f}")
 print(f"Total Score: {total_score:.4f}")
