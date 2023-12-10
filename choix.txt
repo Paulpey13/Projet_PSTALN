@@ -1,0 +1,17 @@
+Choix à effectuer :
+
+1.1 Tâches de prédiction de structures
+    On va partir pour l'instant sur 
+        POS
+        Lemmatisation
+        Traits morphologiques
+    OPTIONS:
+        Si on a pas le time on peut potentiellement en enlever un,
+        Si on est en avance on peut rajouter un model ou rajouter dans le model les expressions idiomatique
+
+1.2 Stratégies de combinaison des tâches
+    Ce serait mieux de partir sur un modele joint, plus stylé
+    Mais si cest galere on fera 3 modèles
+    Pipeline ça a l'air bien aussi mais je connais pas du tout
+
+1.3 Architectures des classifieurs
