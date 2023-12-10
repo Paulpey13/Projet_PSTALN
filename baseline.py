@@ -49,10 +49,10 @@ class POSModel(nn.Module):
         tag_scores = torch.log_softmax(tag_space, dim=2)
         return tag_scores
 
-# Charger les données
+#load les données
 sentences, pos_tags = load_data("UD_French-Sequoia/fr_sequoia-ud-dev.conllu")
 
-# Création d'un vocabulaire
+#init du vocab
 word_counts = Counter(word for sentence in sentences for word in sentence)
 word_to_ix = {word: i+1 for i, word in enumerate(word_counts)}  # +1 pour le padding
 word_to_ix['<PAD>'] = 0
@@ -60,21 +60,22 @@ word_to_ix['<PAD>'] = 0
 tag_counts = Counter(tag for tags in pos_tags for tag in tags)
 tag_to_ix = {tag: i for i, tag in enumerate(tag_counts)}
 
-# Paramètres
+#parametres
 embedding_dim = 64
 hidden_dim = 128
+epochs=100
+batch_size=2
 
-# Création du jeu de données et DataLoader
+# données et data loader
 dataset = POSDataset(sentences, pos_tags, word_to_ix, tag_to_ix)
-data_loader = DataLoader(dataset, batch_size=2, shuffle=True, collate_fn=collate_fn)
+data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
 
-# Initialisation du modèle
+#init du model
 model = POSModel(len(word_to_ix), embedding_dim, hidden_dim, len(tag_to_ix))
 loss_function = nn.CrossEntropyLoss(ignore_index=-1)
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
-# Entraînement
-epochs=100
+#training
 for epoch in range(epochs):  # Nombre d'époques
     for sentence_in, targets in data_loader:
         model.zero_grad()
@@ -83,7 +84,7 @@ for epoch in range(epochs):  # Nombre d'époques
         loss.backward()
         optimizer.step()
 
-# Afficher un exemple de prédiction
+#exemple de pred
 with torch.no_grad():
     inputs = torch.tensor([word_to_ix[word] for word in sentences[0]], dtype=torch.long).unsqueeze(0)
     tag_scores = model(inputs)
