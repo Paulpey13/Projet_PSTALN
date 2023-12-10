@@ -87,7 +87,7 @@ nhead = 4
 nhid = 512
 nlayers = 2
 batch_size = 2
-epochs = 50
+epochs = 200
 
 #init data et dataloader
 dataset = POSDataset(sentences, pos_tags, word_to_ix, tag_to_ix)
