@@ -1,3 +1,4 @@
+#Base line pour le POS (transformer) 
 import torch
 import torch.nn as nn
 import torch.optim as optim
