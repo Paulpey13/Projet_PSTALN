@@ -53,7 +53,7 @@ Choix à effectuer :
 
 Journal de bord (pour mettre à la fin du rapport si besoin)
 
-Creation d'une baseline LSTM pour POS(pour faire un truc different du TP)
-Creation d'une baseline transformer pour POS (+ efficace que LSTM)
+Creation d'une baseline LSTM pour POS(pour faire un truc different du TP) 0.72 acc 50 epochs
+Creation d'une baseline transformer pour POS (+ efficace que LSTM) 0.93 acc 50 epochs
 à faire prochainement : 
     Cross validation pour les 2 pour trouver les meilleurs parametres
