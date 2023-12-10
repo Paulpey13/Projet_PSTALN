@@ -63,7 +63,7 @@ tag_to_ix = {tag: i for i, tag in enumerate(tag_counts)}
 #parametres
 embedding_dim = 64
 hidden_dim = 128
-epochs=5
+epochs=50
 batch_size=2
 
 # données et data loader
@@ -77,12 +77,17 @@ optimizer = optim.SGD(model.parameters(), lr=0.01)
 
 #training
 for epoch in range(epochs):  # Nombre d'époques
+    total_loss = 0
     for sentence_in, targets in data_loader:
         model.zero_grad()
         tag_scores = model(sentence_in)
         loss = loss_function(tag_scores.view(-1, len(tag_to_ix)), targets.view(-1))
         loss.backward()
         optimizer.step()
+        total_loss += loss.item()
+
+    print(f"Epoch {epoch+1}, Loss: {total_loss / len(data_loader)}")
+
 
 #exemple de pred
 with torch.no_grad():
@@ -91,3 +96,27 @@ with torch.no_grad():
     predicted_tags = [list(tag_to_ix.keys())[tag] for tag in tag_scores[0].argmax(dim=1)]
     print(f"Sentence: {' '.join(sentences[0])}")
     print(f"Predicted POS Tags: {predicted_tags}")
+    true_tags = [tag for tag in pos_tags[0]]
+    print(f"Vraies étiquettes POS: {true_tags}")
+
+
+#Evaluations du modele : ici accuracy mais voir ce qui est le plus important
+def calculate_accuracy(true_tags, pred_tags):
+    correct = sum(t1 == t2 for t1, t2 in zip(true_tags, pred_tags))
+    return correct / len(true_tags)
+
+#evaluation du modele sur l'ensemble des données ()
+model.eval()
+all_true_tags = []
+all_predicted_tags = []
+with torch.no_grad():
+    for sentences, tags in data_loader:
+        tag_scores = model(sentences)
+        predicted = torch.argmax(tag_scores, dim=2)
+        all_true_tags.extend(tags.flatten().tolist())
+        all_predicted_tags.extend(predicted.flatten().tolist())
+filtered_true_tags = [tag for tag in all_true_tags if tag != -1]
+filtered_predicted_tags = [all_predicted_tags[i] for i, tag in enumerate(all_true_tags) if tag != -1]
+#Calculer l'accuracy
+accuracy = calculate_accuracy(filtered_true_tags, filtered_predicted_tags)
+print(f"Accuracy: {accuracy:.4f}")
