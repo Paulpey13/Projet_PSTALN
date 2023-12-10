@@ -69,3 +69,7 @@ baseline transformer POS + Lemme + morphologiques
     POS acc 0.9570 (légère baisse mais j'imagine du au hasard (a verifier))
     Lemme 0.8898 (légère baisse aussi, peut être pas du au hasard du coup)
     morphs 0.9911 trop haut je pense que y'a un soucis
+
+PROBLEME TO SOLVE :
+    j'ai traité morphologie comme lemme et pos sauf qu'il y a plusieurs prédiction pour un seul mot (pour morphologie)
+    donc il faut traiter séparement, changer ça
