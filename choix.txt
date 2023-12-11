@@ -9,6 +9,7 @@ Choix à effectuer :
         Si on a pas le time on peut potentiellement en enlever un,
         Si on est en avance on peut rajouter un model ou rajouter dans le model les expressions idiomatique
 
+
 1.2 Stratégies de combinaison des tâches
     Ce serait mieux de partir sur un modele joint, plus stylé
     Mais si cest galere on fera 3 modèles
@@ -77,3 +78,10 @@ PROBLEME TO SOLVE :
 
 TODO : 
     Rajouter OOV
+
+
+Comparer fait maison
+
+concatenation poru + de donnée ou prendre un autre corpus
+
+
