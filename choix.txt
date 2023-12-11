@@ -17,7 +17,6 @@ Choix à effectuer :
 1.3 Architectures des classifieurs
     Transformer car c'est ce qui se fait et ça peut être bien de s'entrainer à l'utiliser
     Surtout pour le transfer learning comme on en a pas trop fait
-
     Sinon si on galere LSTM/GRU très facile à utiliser et efficace
 
 1.4 Langue des données
@@ -31,6 +30,7 @@ Choix à effectuer :
      (c) Peut-on apprendre des embeddings qui marchent pour plusieurs langues ? 
 
      (d) Est-ce que certaines paires (tâche, langue) sont plus difficiles que d’autres ?
+
 
 1.5 Encodage des entrées
     Embedding de pytorch sont très bien pour l'instant
@@ -48,6 +48,7 @@ Choix à effectuer :
 
 3 Évaluation du système
     Utiliser les scripts donné
+
 
 
 
@@ -73,3 +74,6 @@ baseline transformer POS + Lemme + morphologiques
 PROBLEME TO SOLVE :
     j'ai traité morphologie comme lemme et pos sauf qu'il y a plusieurs prédiction pour un seul mot (pour morphologie)
     donc il faut traiter séparement, changer ça
+
+TODO : 
+    Rajouter OOV
