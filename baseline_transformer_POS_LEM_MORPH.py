@@ -13,11 +13,11 @@ import math
 #ici, morph_traits est une list de liste ou chaque 
 #liste interne contient les traits morphologiques de chaque mot. 
 # Si un mot n'a pas de traits spécifié, on met '_' par defait
-
 def load_data(conllu_file):
-    sentences, pos_tags, lemmas, morph_traits = [], [], [], []
-    with open(conllu_file, 'r', encoding='utf-8') as file:
-        for sentence in parse_incr(file):
+    sentences, pos_tags, lemmas, morph_traits = [], [], [], [] 
+    with open(conllu_file, 'r', encoding='utf-8') as file: 
+        for sentence in parse_incr(file): #lire le conllu
+            #Prendre les target voulues
             sentences.append([token['form'].lower() for token in sentence])
             pos_tags.append([token['upos'] for token in sentence])
             lemmas.append([token['lemma'] for token in sentence])
@@ -48,7 +48,7 @@ def collate_fn(batch):
     sentences_padded = pad_sequence(sentences, batch_first=True, padding_value=0)
     pos_tags_padded = pad_sequence(pos_tags, batch_first=True, padding_value=-1)
     lemmas_padded = pad_sequence(lemmas, batch_first=True, padding_value=-1)
-    morph_traits_padded = pad_sequence(morph_traits, batch_first=True, padding_value=-1)
+    morph_traits_padded = pad_sequence(morph_traits, batch_first=True, padding_value=0)
     return sentences_padded, pos_tags_padded, lemmas_padded, morph_traits_padded
 
 
@@ -61,6 +61,13 @@ class PositionalEncoding(nn.Module):
         position = torch.arange(max_len).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
         pe = torch.zeros(max_len, 1, d_model)
+        # pe[:, 0::2] = torch.sin(position * div_term)
+        # pe[:, 1::2] = torch.cos(position * div_term)
+        # pe = pe.unsqueeze(0).transpose(0, 1)
+        # self.register_buffer('pe', pe)
+        
+
+        # before merging morph :
         pe[:, 0, 0::2] = torch.sin(position * div_term)
         pe[:, 0, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe)
@@ -80,7 +87,7 @@ class POSLemTransformerModel(nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(transformer_layers, nlayers)
         self.hidden2pos_tag = nn.Linear(embedding_dim, pos_tagset_size)
         self.hidden2lemma = nn.Linear(embedding_dim, lemma_vocab_size)
-        self.hidden2morph = nn.Linear(embedding_dim, morph_trait_size)  # Ajout d'un chemin pour les traits morphologiques
+        self.hidden2morph = nn.Linear(embedding_dim, morph_trait_size)  
 
     def forward(self, sentence):
         embeds = self.embedding(sentence) * math.sqrt(self.embedding_dim)
@@ -93,7 +100,7 @@ class POSLemTransformerModel(nn.Module):
         lemma_space = self.hidden2lemma(transformer_out)
         lemma_scores = torch.log_softmax(lemma_space, dim=2)
 
-        morph_trait_space = self.hidden2morph(transformer_out)  # Traitement des traits morphologiques
+        morph_trait_space = self.hidden2morph(transformer_out) 
         morph_trait_scores = torch.log_softmax(morph_trait_space, dim=2)
 
         return pos_tag_scores, lemma_scores, morph_trait_scores
@@ -104,7 +111,7 @@ sentences, pos_tags, lemmas, morph_traits = load_data("UD_French-Sequoia/fr_sequ
 
 #init le vocab
 word_counts = Counter(word for sentence in sentences for word in sentence)
-word_to_ix = {word: i+1 for i, word in enumerate(word_counts)}  # +1 pour le padding
+word_to_ix = {word: i+1 for i, word in enumerate(word_counts)}  #+1 pour le padding
 word_to_ix['<PAD>'] = 0
 
 #pos tags
@@ -113,19 +120,13 @@ tag_to_ix = {tag: i for i, tag in enumerate(tag_counts)}
 
 #lemmes
 lemma_counts = Counter(lemma for lemma_list in lemmas for lemma in lemma_list)
-lemma_to_ix = {lemma: i+1 for i, lemma in enumerate(lemma_counts)}  # +1 pour le padding
+lemma_to_ix = {lemma: i+1 for i, lemma in enumerate(lemma_counts)}  #+1 pour le padding
 lemma_to_ix['<PAD>'] = 0
 
 #morphologies
-unique_morph_traits = set()
-for sentence_morph_traits in morph_traits:
-    for trait in sentence_morph_traits:
-        if trait != '_':
-            unique_morph_traits.update(trait.split('|'))
-
+unique_morph_traits = set(trait for trait_list in morph_traits for trait in trait_list if trait != '_')
 morph_to_ix = {trait: i+1 for i, trait in enumerate(unique_morph_traits)}
-morph_to_ix['<PAD>'] = 0
-
+morph_to_ix['_'] = 0
 
 
 #params
@@ -134,7 +135,7 @@ nhead = 4
 nhid = 512
 nlayers = 2
 batch_size = 2
-epochs = 10
+epochs = 1
 
 #init data et dataloader
 # Initialisation de POSLemDataset avec tous les arguments nécessaires
