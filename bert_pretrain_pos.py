@@ -12,8 +12,6 @@ import models
 
 # Chargement des données et création des dictionnaires
 sentences, pos_tags = utils.load_data("UD_French-Sequoia/fr_sequoia-ud-train.conllu",pos=True)
-
-print(len(sentences))
 #réduire data pour phase de test
 limit=100
 sentences=sentences[0:limit]

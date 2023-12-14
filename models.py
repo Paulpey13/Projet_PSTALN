@@ -6,11 +6,15 @@ from transformers import BertTokenizer, BertModel
 from conllu import parse_incr
 from collections import Counter
 from utils import load_data
+from transformers import AutoModelForSequenceClassification, CamembertForMaskedLM, AutoTokenizer, AutoConfig
 
 
 ### -------------------- Implémentation du model BERT pré entrainé -------------------- ###
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
+tokenizer = CamembertForMaskedLM.from_pretrained('camembert-base')
+
+
 
 # Dataset
 class BertPOSDataset(Dataset):
@@ -68,3 +72,6 @@ class BertPOSTagger(nn.Module):
         return tag_scores
 
 ### -------------------- fin de l'implémentation du model BERT pré entrainé -------------------- ###
+
+
+
