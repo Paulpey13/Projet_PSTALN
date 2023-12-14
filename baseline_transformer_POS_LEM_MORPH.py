@@ -7,22 +7,7 @@ from conllu import parse_incr
 from collections import Counter
 from torch.nn.utils.rnn import pad_sequence
 import math
-
-#Lecture+traitement des data
-#Modification par rapport à la baseline POS_LEM pour ajouter les morphologies
-#ici, morph_traits est une list de liste ou chaque 
-#liste interne contient les traits morphologiques de chaque mot. 
-# Si un mot n'a pas de traits spécifié, on met '_' par defait
-def load_data(conllu_file):
-    sentences, pos_tags, lemmas, morph_traits = [], [], [], [] 
-    with open(conllu_file, 'r', encoding='utf-8') as file: 
-        for sentence in parse_incr(file): #lire le conllu
-            #Prendre les target voulues
-            sentences.append([token['form'].lower() for token in sentence])
-            pos_tags.append([token['upos'] for token in sentence])
-            lemmas.append([token['lemma'] for token in sentence])
-            morph_traits.append(['|'.join([f"{k}={v}" for k, v in token['feats'].items()]) if token['feats'] else '_' for token in sentence])
-    return sentences, pos_tags, lemmas, morph_traits
+from utils import load_data
 
 
 
@@ -102,7 +87,7 @@ class POSLemTransformerModel(nn.Module):
 
 
 #load data
-sentences, pos_tags, lemmas, morph_traits = load_data("UD_French-Sequoia/fr_sequoia-ud-dev.conllu")
+sentences, pos_tags, lemmas, morph_traits = load_data("UD_French-Sequoia/fr_sequoia-ud-dev.conllu",True,True,True)
 
 #init le vocab
 word_counts = Counter(word for sentence in sentences for word in sentence)
