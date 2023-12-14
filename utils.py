@@ -59,8 +59,8 @@ def test_performance(model, test_loader, loss_function, tag_to_ix):
 ### Entrainement du model Bert (voir si c adapté a tous les models)
 
 
-def train(model, data_loader, loss_function, optimizer, tag_to_ix):
-    for epoch in range(3):  # Nombre d'époques
+def train(model, data_loader, loss_function, optimizer, tag_to_ix,epochs):
+    for epoch in range(epochs):  # Nombre d'époques
         model.train()
         total_loss, total_accuracy = 0, 0
 
