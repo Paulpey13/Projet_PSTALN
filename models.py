@@ -14,9 +14,11 @@ from transformers import AutoModelForSequenceClassification, CamembertForMaskedL
 multi='bert-base-multilingual-cased'
 camembert='camembert-base'
 current=camembert #pour changer quand j'ai besoin de test
-tokenizer = CamembertTokenizer.from_pretrained(current)
 
-
+if current==camembert:
+    tokenizer=CamembertTokenizer.from_pretrained(camembert)
+else:
+    tokenizer=BertModel.from_pretrained(multi)
 
 # Dataset
 class BertPOSDataset(Dataset):
@@ -65,7 +67,10 @@ class BertPOSTagger(nn.Module):
     def __init__(self, tagset_size):
         super(BertPOSTagger, self).__init__()
         # self.bert = BertModel.from_pretrained(current)
-        self.bert = CamembertModel.from_pretrained(current)
+        if current==camembert:
+            self.bert = CamembertModel.from_pretrained(camembert)
+        else:
+            self.bert = BertModel.from_pretrained(multi)
         self.hidden2tag = nn.Linear(self.bert.config.hidden_size, tagset_size)
 
     def forward(self, input_ids, attention_mask):
