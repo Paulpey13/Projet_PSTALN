@@ -35,6 +35,8 @@ def collate_fn(batch):
     tags_padded = pad_sequence(tags, batch_first=True, padding_value=-1)
     return sentences_padded, tags_padded
 
+
+
 #classe du model (ici lstm mais on peut changer cetait pour test un truc different du TP)
 class POSModel(nn.Module):
     def __init__(self, vocab_size, embedding_dim, hidden_dim, tagset_size):

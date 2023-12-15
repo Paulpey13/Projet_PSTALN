@@ -8,6 +8,7 @@ from collections import Counter
 from torch.nn.utils.rnn import pad_sequence
 import math
 
+
 #Lecture+traitement des data
 #Modification par rapport à la baseline pour ajouter les lemmes
 def load_data(conllu_file):
