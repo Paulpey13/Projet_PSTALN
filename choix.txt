@@ -78,6 +78,7 @@ PROBLEME TO SOLVE :
 
 TODO : 
     Rajouter OOV
+    COMPARER CAMEMBERT ET MULTILING.. pré train
 
 
 Comparer fait maison

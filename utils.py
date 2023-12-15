@@ -1,5 +1,6 @@
 from conllu import parse_incr
 import torch
+import time
 
 #Charger les données
 #Mettre true ce qu'on veut charger, ne pas spécifier sinon
@@ -60,6 +61,7 @@ def test_performance(model, test_loader, loss_function, tag_to_ix):
 
 
 def train(model, data_loader, loss_function, optimizer, tag_to_ix,epochs):
+    start_time = time.time()
     for epoch in range(epochs):  # Nombre d'époques
         model.train()
         total_loss, total_accuracy = 0, 0
@@ -78,3 +80,4 @@ def train(model, data_loader, loss_function, optimizer, tag_to_ix,epochs):
                 total_accuracy += accuracy.item()
 
         print(f"Epoch {epoch+1}, Loss: {total_loss / len(data_loader)}, Accuracy: {total_accuracy / len(data_loader)}")
+        print(f"Time elapsed: {(time.time() - start_time)/60} min")

@@ -6,13 +6,15 @@ from transformers import BertTokenizer, BertModel
 from conllu import parse_incr
 from collections import Counter
 from utils import load_data
-from transformers import AutoModelForSequenceClassification, CamembertForMaskedLM, AutoTokenizer, AutoConfig, CamembertTokenizer
+from transformers import AutoModelForSequenceClassification, CamembertForMaskedLM, AutoTokenizer, AutoConfig, CamembertTokenizer,CamembertModel
 
 
-### -------------------- Implémentation du model BERT pré entrainé -------------------- ###
+### -------------------- Implémentation du model (camem)BERT pré entrainé -------------------- ###
 
-# tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
-tokenizer = CamembertTokenizer.from_pretrained('camembert-base')
+multi='bert-base-multilingual-cased'
+camembert='camembert-base'
+current=camembert #pour changer quand j'ai besoin de test
+tokenizer = CamembertTokenizer.from_pretrained(current)
 
 
 
@@ -62,7 +64,8 @@ def bert_collate_fn(batch):
 class BertPOSTagger(nn.Module):
     def __init__(self, tagset_size):
         super(BertPOSTagger, self).__init__()
-        self.bert = BertModel.from_pretrained('bert-base-multilingual-cased')
+        # self.bert = BertModel.from_pretrained(current)
+        self.bert = CamembertModel.from_pretrained(current)
         self.hidden2tag = nn.Linear(self.bert.config.hidden_size, tagset_size)
 
     def forward(self, input_ids, attention_mask):
