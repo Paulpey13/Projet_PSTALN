@@ -7,8 +7,6 @@ from conllu import parse_incr
 from collections import Counter
 from torch.nn.utils.rnn import pad_sequence
 import math
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(torch.cuda.is_available())  # Renvoie True si un GPU est disponible
 
 def load_data(conllu_file, char_to_ix, max_word_len):
     sentences, pos_tags = [], []
@@ -28,7 +26,7 @@ def load_data(conllu_file, char_to_ix, max_word_len):
 
 
 class POSDataset(Dataset):
-    def __init__(self, sentences, pos_tags, tag_to_ix, max_word_len):
+    def __init__(self, sentences, pos_tags, tag_to_ix, max_word_len,char_to_ix):
         # sentences: List of lists, where each inner list is a sequence of character indices for a sentence
         # pos_tags: List of lists, where each inner list contains POS tags for the corresponding sentence
         # tag_to_ix: Dictionary mapping POS tags to unique indices
@@ -116,7 +114,7 @@ class POSTransformerModel(nn.Module):
 def calculate_accuracy(true_tags, pred_tags):
     correct = sum(t1 == t2 for t1, t2 in zip(true_tags, pred_tags))
     return correct / len(true_tags)
-def evaluate_model(model, data_loader, loss_function):
+def evaluate_model(model, data_loader, loss_function,device, tag_to_ix):
     model.eval()
     total_loss = 0
     all_true_tags = []
@@ -168,112 +166,3 @@ def load_data(conllu_file, char_to_ix, max_word_len):
     return sentences, pos_tags
 
 
-
-batch_size=64
-epochs=20
-# Load data using the load_data_1 function
-sentences, pos_tags = load_data_1("UD_French-Sequoia/fr_sequoia-ud-train.conllu")
-
-# Create character and tag mappings
-char_counts = Counter(char for sentence in sentences for word in sentence for char in word)
-char_to_ix = {char: i for i, char in enumerate(char_counts, start=2)}
-char_to_ix['<PAD>'], char_to_ix['<UNK>'] = 0, 1  # Padding and unknown character
-
-tag_counts = Counter(tag for tags in pos_tags for tag in tags)
-tag_to_ix = {tag: i for i, tag in enumerate(tag_counts)}
-
-max_word_len = max(len(word) for sentence in sentences for word in sentence)
-
-# Now load the data in the desired format using the load_data function
-train_sentences, train_pos_tags = load_data("UD_French-Sequoia/fr_sequoia-ud-train.conllu", char_to_ix, max_word_len)
-validation_sentences, validation_pos_tags = load_data("UD_French-Sequoia/fr_sequoia-ud-dev.conllu", char_to_ix, max_word_len)
-
-# Rest of your code for Dataset, DataLoader, Model initialization, etc.
-
-# Dataset and DataLoader
-dataset = POSDataset(train_sentences, train_pos_tags, tag_to_ix, max_word_len)
-data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
-
-validation_dataset = POSDataset(validation_sentences, validation_pos_tags, tag_to_ix, max_word_len)
-validation_data_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
-
-# Model initialization
-num_chars = len(char_to_ix)
-char_embedding_dim = 256
-num_filters = 256
-kernel_size = 3
-nhead = 4
-nhid = 512
-nlayers = 2
-tagset_size = len(tag_to_ix)
-
-model = POSTransformerModel(num_chars, char_embedding_dim, num_filters, kernel_size, nhead, nhid, nlayers, tagset_size)
-
-# Loss and Optimizer
-loss_function = nn.CrossEntropyLoss(ignore_index=-1)
-optimizer = optim.SGD(model.parameters(), lr=0.01)
-
-
-patience = 2  # Nombre d'époques à attendre après la dernière amélioration de la loss de validation
-best_val_accuracy = 0
-epochs_no_improve = 0
-
-#Training
-for epoch in range(epochs): 
-    model.train()
-    model.to(device)  # Déplacer le modèle sur le GPU si disponible
-    total_loss = 0
-    for sentence_in, targets in data_loader:
-        sentence_in, targets = sentence_in.to(device), targets.to(device)  # Déplacer les données sur le périphérique
-        optimizer.zero_grad()
-        tag_scores = model(sentence_in)
-        loss = loss_function(tag_scores.view(-1, len(tag_to_ix)), targets.view(-1))
-        loss.backward()
-        optimizer.step()
-        total_loss += loss.item()
-
-    # Utiliser la fonction modifiée pour évaluer la validation loss et l'accuracy
-    val_loss, val_accuracy = evaluate_model(model, validation_data_loader, loss_function)
-    print(f"Epoch {epoch+1}, Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
-    if val_accuracy > best_val_accuracy:
-        best_val_accuracy = val_accuracy
-        epochs_no_improve = 0
-    else:
-        epochs_no_improve += 1
-
-    # Arrêt précoce si aucune amélioration
-    if epochs_no_improve == patience:
-        print("Arrêt précoce : La loss de validation ne s'améliore plus")
-        break
-    print(f"Epoch {epoch+1}, Loss: {total_loss / len(data_loader)}")
-
-model.eval()
-with torch.no_grad():
-    # Convert the first sentence in the dataset to character indices
-    char_indices = [[char_to_ix.get(char, char_to_ix['<UNK>']) for char in word] for word in sentences[0]]
-    char_indices = [word[:max_word_len] + [char_to_ix['<PAD>']] * (max_word_len - len(word)) for word in char_indices]
-
-    # Convert to tensor and add batch dimension
-    inputs = torch.tensor(char_indices, dtype=torch.long).unsqueeze(0).to(device)
-
-    # Get tag scores from the model
-    tag_scores = model(inputs)
-    predicted_tags = [list(tag_to_ix.keys())[tag] for tag in tag_scores[0].argmax(dim=1).cpu()]
-    
-    print(f"Sentence: {' '.join(sentences[0])}")
-    print(f"Predicted POS Tags: {predicted_tags}")
-    true_tags = [tag for tag in pos_tags[0]]
-    print(f"Vraies étiquettes POS: {true_tags}")
-
-
-
-test_sentences, test_pos_tags = load_data("UD_French-Sequoia/fr_sequoia-ud-test.conllu", char_to_ix, max_word_len)
-
-
-test_dataset = POSDataset(test_sentences, test_pos_tags, tag_to_ix, max_word_len)
-test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
-
-
-# Calculer l'accuracy
-loss,accuracy = evaluate_model(model,test_data_loader,loss_function)
-print(f"Test Accuracy : {accuracy:.4f}")
