@@ -19,6 +19,7 @@ def load_data(conllu_file, char_to_ix, max_word_len):
                 char_sentences.append(chars)
             sentences.append(char_sentences)
             pos_tags.append([token['upos'] for token in sentence])
+
     return sentences, pos_tags
 
 
@@ -87,7 +88,7 @@ class CharCNNEmbedding(nn.Module):
         batch_size, seq_len, word_len = x.size(0), x.size(1), x.size(2)
         x = self.char_embedding(x)  # [batch_size, seq_len, word_len, embedding_dim]
         x = x.view(batch_size * seq_len, word_len, -1).transpose(1, 2)  # [batch_size * seq_len, embedding_dim, word_len]
-        x = self.conv(x)  # Apply Conv1d
+        x = self.conv(x)
         x = self.pool(x).squeeze(-1)  # [batch_size * seq_len, num_filters]
         x = x.view(batch_size, seq_len, -1)  # Reshape back to [batch_size, seq_len, num_filters]
         return x
