@@ -7,7 +7,7 @@ from conllu import parse_incr
 from collections import Counter
 from torch.nn.utils.rnn import pad_sequence
 import math
-
+from sklearn.metrics import f1_score
 def load_data(conllu_file, char_to_ix, max_word_len):
     sentences, pos_tags = [], []
     with open(conllu_file, 'r', encoding='utf-8') as file:
@@ -153,6 +153,7 @@ def evaluate_model(model, data_loader, loss_function,device, tag_to_ix):
     # Calculer l'accuracy
     accuracy = calculate_accuracy(filtered_true_tags, filtered_predicted_tags)
     precision, recall, f1 = calculate_f1(filtered_true_tags, filtered_predicted_tags)
+    print(f1_score(filtered_true_tags, filtered_predicted_tags, average='macro'))
     return total_loss / len(data_loader), accuracy, precision, recall, f1
 
 
