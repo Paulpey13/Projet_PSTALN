@@ -48,81 +48,36 @@ class POSModel(nn.Module):
         tag_scores = torch.log_softmax(tag_space, dim=2)
         return tag_scores
 
-sentences, pos_tags = load_data("UD_French-Sequoia/fr_sequoia-ud-train.conllu")
-
-word_counts = Counter(word for sentence in sentences for word in sentence)
-word_to_ix = {word: i+1 for i, word in enumerate(word_counts)}  # +1 pour le padding
-word_to_ix['<PAD>'] = 0
-word_to_ix['<OOV>'] = len(word_to_ix)
-
-tag_counts = Counter(tag for tags in pos_tags for tag in tags)
-tag_to_ix = {tag: i for i, tag in enumerate(tag_counts)}
-
-embedding_dim = 64
-hidden_dim = 128
-epochs=200
-batch_size=16
-
-dataset = POSDataset(sentences, pos_tags, word_to_ix, tag_to_ix)
-data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
-
-model = POSModel(len(word_to_ix), embedding_dim, hidden_dim, len(tag_to_ix))
-loss_function = nn.CrossEntropyLoss(ignore_index=-1)
-optimizer = optim.SGD(model.parameters(), lr=0.01)
-
-for epoch in range(epochs):
-    total_loss = 0
-    for sentence_in, targets in data_loader:
-        model.zero_grad()
-        tag_scores = model(sentence_in)
-        loss = loss_function(tag_scores.view(-1, len(tag_to_ix)), targets.view(-1))
-        loss.backward()
-        optimizer.step()
-        total_loss += loss.item()
-    print(f"Epoch {epoch+1}, Loss: {total_loss / len(data_loader)}")
-
-with torch.no_grad():
-    inputs = torch.tensor([word_to_index(word, word_to_ix) for word in sentences[0]], dtype=torch.long).unsqueeze(0)
-    tag_scores = model(inputs)
-    predicted_tags = [list(tag_to_ix.keys())[tag] for tag in tag_scores[0].argmax(dim=1)]
-    print(f"Sentence: {' '.join(sentences[0])}")
-    print(f"Predicted POS Tags: {predicted_tags}")
-    true_tags = [tag for tag in pos_tags[0]]
-    print(f"Vraies étiquettes POS: {true_tags}")
-
 def calculate_accuracy(true_tags, pred_tags):
     correct = sum(t1 == t2 for t1, t2 in zip(true_tags, pred_tags))
     return correct / len(true_tags)
 
-model.eval()
-all_true_tags = []
-all_predicted_tags = []
-with torch.no_grad():
-    for sentences, tags in data_loader:
-        tag_scores = model(sentences)
-        predicted = torch.argmax(tag_scores, dim=2)
-        all_true_tags.extend(tags.flatten().tolist())
-        all_predicted_tags.extend(predicted.flatten().tolist())
-filtered_true_tags = [tag for tag in all_true_tags if tag != -1]
-filtered_predicted_tags = [all_predicted_tags[i] for i, tag in enumerate(all_true_tags) if tag != -1]
-accuracy = calculate_accuracy(filtered_true_tags, filtered_predicted_tags)
-print(f"Accuracy: {accuracy:.4f}")
+def calculate_f1(true_pos, predicted_pos):
+    true_positives = sum(t1 == t2 and t1 != 0 for t1, t2 in zip(true_pos, predicted_pos))
+    false_positives = sum(t1 != 0 and t2 == 0 for t1, t2 in zip(true_pos, predicted_pos))
+    false_negatives = sum(t1 == 0 and t2 != 0 for t1, t2 in zip(true_pos, predicted_pos))
 
-test_sentences, test_pos_tags = load_data("UD_French-Sequoia/fr_sequoia-ud-test.conllu")
-test_dataset = POSDataset(test_sentences, test_pos_tags, word_to_ix, tag_to_ix)
-test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
+    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
 
-model.eval()
-all_true_tags_test = []
-all_predicted_tags_test = []
-with torch.no_grad():
-    for sentences, tags in test_data_loader:
-        tag_scores = model(sentences)
-        predicted = torch.argmax(tag_scores, dim=2)
-        all_true_tags_test.extend(tags.flatten().tolist())
-        all_predicted_tags_test.extend(predicted.flatten().tolist())
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    return precision, recall, f1
 
-filtered_true_tags_test = [tag for tag in all_true_tags_test if tag != -1]
-filtered_predicted_tags_test = [all_predicted_tags_test[i] for i, tag in enumerate(all_true_tags_test) if tag != -1]
-test_accuracy = calculate_accuracy(filtered_true_tags_test, filtered_predicted_tags_test)
-print(f"Test Accuracy: {test_accuracy:.4f}")
+def evaluate_model(model, data_loader, loss_function, tag_to_ix):
+    model.eval()
+    total_loss = 0
+    all_true_pos = []
+    all_predicted_pos = []
+    with torch.no_grad():
+        for sentences, pos_tags in data_loader:
+            pos_scores = model(sentences)
+            predicted = torch.argmax(pos_scores, dim=2)
+            loss = loss_function(pos_scores.view(-1, len(tag_to_ix)), pos_tags.view(-1))
+            total_loss += loss.item()
+            all_true_pos.extend(pos_tags.flatten().tolist())
+            all_predicted_pos.extend(predicted.flatten().tolist())
+    filtered_true_pos = [tag for tag in all_true_pos if tag != -1]
+    filtered_predicted_pos = [all_predicted_pos[i] for i, tag in enumerate(all_true_pos) if tag != -1]
+    accuracy = calculate_accuracy(filtered_true_pos, filtered_predicted_pos)
+    precision, recall, f1 = calculate_f1(filtered_true_pos, filtered_predicted_pos)
+    return total_loss / len(data_loader), accuracy, precision, recall, f1

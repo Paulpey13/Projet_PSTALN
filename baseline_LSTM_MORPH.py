@@ -52,6 +52,17 @@ def calculate_accuracy(true_morph, predicted_morphs):
     correct = sum(t1 == t2 for t1, t2 in zip(true_morph, predicted_morphs))
     return correct / len(true_morph)
 
+def calculate_f1(true_morph, predicted_morphs):
+    true_positives = sum(t1 == t2 and t1 != 0 for t1, t2 in zip(true_morph, predicted_morphs))
+    false_positives = sum(t1 != 0 and t2 == 0 for t1, t2 in zip(true_morph, predicted_morphs))
+    false_negatives = sum(t1 == 0 and t2 != 0 for t1, t2 in zip(true_morph, predicted_morphs))
+
+    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
+
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    return precision, recall, f1
+
 def evaluate_model(model, data_loader, loss_function, morph_to_ix):
     model.eval()
     total_loss = 0
@@ -68,4 +79,5 @@ def evaluate_model(model, data_loader, loss_function, morph_to_ix):
     filtered_true_morphs = [morph for morph in all_true_morphs if morph != -1]
     filtered_predicted_morphs = [all_predicted_morphs[i] for i, morph in enumerate(all_true_morphs) if morph != -1]
     accuracy = calculate_accuracy(filtered_true_morphs, filtered_predicted_morphs)
-    return total_loss / len(data_loader), accuracy
+    precision, recall, f1 = calculate_f1(filtered_true_morphs, filtered_predicted_morphs)
+    return total_loss / len(data_loader), accuracy, precision, recall, f1

@@ -115,6 +115,19 @@ class POSTransformerModel(nn.Module):
 def calculate_accuracy(true_tags, pred_tags):
     correct = sum(t1 == t2 for t1, t2 in zip(true_tags, pred_tags))
     return correct / len(true_tags)
+
+def calculate_f1(true_pos, predicted_pos):
+    true_positives = sum(t1 == t2 and t1 != 0 for t1, t2 in zip(true_pos, predicted_pos))
+    false_positives = sum(t1 != 0 and t2 == 0 for t1, t2 in zip(true_pos, predicted_pos))
+    false_negatives = sum(t1 == 0 and t2 != 0 for t1, t2 in zip(true_pos, predicted_pos))
+
+    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
+
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    return precision, recall, f1
+
+
 def evaluate_model(model, data_loader, loss_function,device, tag_to_ix):
     model.eval()
     total_loss = 0
@@ -139,7 +152,8 @@ def evaluate_model(model, data_loader, loss_function,device, tag_to_ix):
 
     # Calculer l'accuracy
     accuracy = calculate_accuracy(filtered_true_tags, filtered_predicted_tags)
-    return total_loss / len(data_loader), accuracy
+    precision, recall, f1 = calculate_f1(filtered_true_tags, filtered_predicted_tags)
+    return total_loss / len(data_loader), accuracy, precision, recall, f1
 
 
 
