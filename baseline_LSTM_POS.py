@@ -5,6 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 from conllu import parse_incr
 from collections import Counter
 from torch.nn.utils.rnn import pad_sequence
+from sklearn.metrics import f1_score
 
 def load_data(conllu_file):
     sentences, pos_tags = [], []
@@ -52,17 +53,6 @@ def calculate_accuracy(true_tags, pred_tags):
     correct = sum(t1 == t2 for t1, t2 in zip(true_tags, pred_tags))
     return correct / len(true_tags)
 
-def calculate_f1(true_pos, predicted_pos):
-    true_positives = sum(t1 == t2 and t1 != 0 for t1, t2 in zip(true_pos, predicted_pos))
-    false_positives = sum(t1 != 0 and t2 == 0 for t1, t2 in zip(true_pos, predicted_pos))
-    false_negatives = sum(t1 == 0 and t2 != 0 for t1, t2 in zip(true_pos, predicted_pos))
-
-    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
-    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
-
-    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-    return precision, recall, f1
-
 def evaluate_model(model, data_loader, loss_function, tag_to_ix):
     model.eval()
     total_loss = 0
@@ -79,5 +69,5 @@ def evaluate_model(model, data_loader, loss_function, tag_to_ix):
     filtered_true_pos = [tag for tag in all_true_pos if tag != -1]
     filtered_predicted_pos = [all_predicted_pos[i] for i, tag in enumerate(all_true_pos) if tag != -1]
     accuracy = calculate_accuracy(filtered_true_pos, filtered_predicted_pos)
-    precision, recall, f1 = calculate_f1(filtered_true_pos, filtered_predicted_pos)
-    return total_loss / len(data_loader), accuracy, precision, recall, f1
+    f1 = f1_score(filtered_true_pos, filtered_predicted_pos, average='macro')
+    return total_loss / len(data_loader), accuracy, f1
