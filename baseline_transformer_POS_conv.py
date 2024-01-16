@@ -7,6 +7,7 @@ from conllu import parse_incr
 from collections import Counter
 from torch.nn.utils.rnn import pad_sequence
 import math
+from sklearn.metrics import f1_score
 
 def load_data(conllu_file, char_to_ix, max_word_len):
     sentences, pos_tags = [], []
@@ -19,6 +20,7 @@ def load_data(conllu_file, char_to_ix, max_word_len):
                 char_sentences.append(chars)
             sentences.append(char_sentences)
             pos_tags.append([token['upos'] for token in sentence])
+
     return sentences, pos_tags
 
 
@@ -87,7 +89,7 @@ class CharCNNEmbedding(nn.Module):
         batch_size, seq_len, word_len = x.size(0), x.size(1), x.size(2)
         x = self.char_embedding(x)  # [batch_size, seq_len, word_len, embedding_dim]
         x = x.view(batch_size * seq_len, word_len, -1).transpose(1, 2)  # [batch_size * seq_len, embedding_dim, word_len]
-        x = self.conv(x)  # Apply Conv1d
+        x = self.conv(x)
         x = self.pool(x).squeeze(-1)  # [batch_size * seq_len, num_filters]
         x = x.view(batch_size, seq_len, -1)  # Reshape back to [batch_size, seq_len, num_filters]
         return x
@@ -114,6 +116,8 @@ class POSTransformerModel(nn.Module):
 def calculate_accuracy(true_tags, pred_tags):
     correct = sum(t1 == t2 for t1, t2 in zip(true_tags, pred_tags))
     return correct / len(true_tags)
+
+
 def evaluate_model(model, data_loader, loss_function,device, tag_to_ix):
     model.eval()
     total_loss = 0
@@ -138,7 +142,8 @@ def evaluate_model(model, data_loader, loss_function,device, tag_to_ix):
 
     # Calculer l'accuracy
     accuracy = calculate_accuracy(filtered_true_tags, filtered_predicted_tags)
-    return total_loss / len(data_loader), accuracy
+    f1 = f1_score(filtered_true_tags, filtered_predicted_tags, average='macro')
+    return total_loss / len(data_loader), accuracy, f1
 
 
 

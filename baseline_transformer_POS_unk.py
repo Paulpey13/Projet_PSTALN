@@ -7,6 +7,8 @@ from conllu import parse_incr
 from collections import Counter
 from torch.nn.utils.rnn import pad_sequence
 import math
+from sklearn.metrics import f1_score
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #device='cpu'
 print(torch.cuda.is_available())  # Renvoie True si un GPU est disponible
@@ -80,6 +82,7 @@ class POSTransformerModel(nn.Module):
 def calculate_accuracy(true_tags, pred_tags):
     correct = sum(t1 == t2 for t1, t2 in zip(true_tags, pred_tags))
     return correct / len(true_tags)
+
 def evaluate_model(model, data_loader, loss_function, tag_to_ix):
     model.eval()
     total_loss = 0
@@ -103,4 +106,5 @@ def evaluate_model(model, data_loader, loss_function, tag_to_ix):
 
     # Calculer l'accuracy
     accuracy = calculate_accuracy(filtered_true_tags, filtered_predicted_tags)
-    return total_loss / len(data_loader), accuracy
+    f1 = f1_score(filtered_true_tags, filtered_predicted_tags, average='macro')
+    return total_loss / len(data_loader), accuracy, f1
